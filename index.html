@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Open CV — Free, Open-Source CV Builder</title>
+    <meta name="description"
+        content="Create and edit a perfectly aligned CV. 100% client-side, open-source, and free to use." />
+    <style>
+        /*
+      Open CV — MIT License
+      Copyright (c) 2025 Open CV Contributors
+
+      Permission is hereby granted, free of charge, to any person obtaining a copy
+      of this software and associated documentation files (the "Software"), to deal
+      in the Software without restriction, including without limitation the rights
+      to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+      copies of the Software, and to permit persons to do so, subject to the
+      following conditions:
+
+      The above copyright notice and this permission notice shall be included in all
+      copies or substantial portions of the Software.
+
+      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+      OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+      SOFTWARE.
+    */
+
+        /* ======= CSS RESET (light) ======= */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            color: #0f172a;
+            background: #f6f7fb;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            margin: 0 0 .5rem;
+            line-height: 1.2;
+        }
+
+        p {
+            margin: .25rem 0;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        /* ======= App Layout ======= */
+        .app {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100dvh;
+        }
+
+        .sidebar {
+            background: #10172a;
+            color: #e5e7eb;
+            padding: 1rem;
+            border-right: 1px solid #0b1220;
+            position: sticky;
+            top: 0;
+            height: 100dvh;
+            overflow: auto;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .75rem;
+        }
+
+        .brand .logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6366f1, #22d3ee);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, .4);
+        }
+
+        .brand h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .panel {
+            background: #0b1220;
+            border: 1px solid #0f172a;
+            border-radius: 14px;
+            padding: .75rem;
+            margin-bottom: .75rem;
+        }
+
+        .panel h2 {
+            font-size: .9rem;
+            color: #cbd5e1;
+            margin-bottom: .5rem;
+            font-weight: 700;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
+        }
+
+        .row3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: .5rem;
+        }
+
+        .btn {
+            inline-size: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .5rem .75rem;
+            border: 1px solid #1f2937;
+            background: #111827;
+            color: #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform .05s ease, background .2s ease, border-color .2s ease;
+        }
+
+        .btn:hover {
+            background: #0b1220;
+            border-color: #334155;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .select,
+        .input,
+        .checkbox {
+            width: 100%;
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
+            padding: .5rem .6rem;
+            border-radius: 10px;
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .35rem .6rem;
+        }
+
+        .footer {
+            font-size: .75rem;
+            color: #9ca3af;
+            opacity: .8;
+            margin-top: .5rem;
+        }
+
+        .footer a {
+            color: #93c5fd;
+            text-decoration: none;
+            border-bottom: 1px dotted #93c5fd;
+        }
+
+        /* ======= Canvas ======= */
+        .workspace {
+            display: grid;
+            place-items: start center;
+            padding: 1.2rem;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            gap: .5rem;
+            padding: .6rem;
+            margin-bottom: .6rem;
+            background: rgba(255, 255, 255, .7);
+            backdrop-filter: saturate(140%) blur(12px);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, .06);
+        }
+
+        .toolbar .btn {
+            width: auto;
+            background: #fff;
+            color: #0f172a;
+            border-color: #e5e7eb;
+        }
+
+        .toolbar .btn:hover {
+            background: #f8fafc;
+        }
+
+        /* A4 page */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 16mm 15mm;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, .08);
+            position: relative;
+        }
+
+        /* Grid layout: 12 columns for precise alignment */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: min-content;
+            gap: 6mm 6mm;
+        }
+
+        /* Optional, toggleable visual grid overlay */
+        .grid-overlay {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(to right, rgba(99, 102, 241, .1) 1px, transparent 1px), linear-gradient(to bottom, rgba(99, 102, 241, .08) 1px, transparent 1px);
+            background-size: calc((210mm - 30mm - 11 * 6mm) / 12) 100%, 100% 8mm;
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+
+        .page.show-grid .grid-overlay {
+            opacity: 1;
+        }
+
+        /* ======= CV Elements ======= */
+        .cv-header {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: end;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 4mm;
+        }
+
+        .name {
+            font-size: 26pt;
+            font-weight: 800;
+            letter-spacing: .2px;
+        }
+
+        .title {
+            font-size: 12pt;
+            color: #334155;
+        }
+
+        .contact {
+            text-align: right;
+            font-size: 9.5pt;
+            color: #334155;
+            line-height: 1.3;
+        }
+
+        .section {
+            grid-column: span 6;
+            border-radius: 10px;
+        }
+
+        .section.full {
+            grid-column: 1 / -1;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            margin-bottom: 2mm;
+        }
+
+        .section-title {
+            font-weight: 800;
+            font-size: 11pt;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            display: inline-flex;
+            gap: .35rem;
+        }
+
+        .icon-btn {
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10pt;
+            cursor: pointer;
+        }
+
+        .icon-btn:hover {
+            background: #f8fafc;
+        }
+
+        .item {
+            margin-bottom: 3mm;
+        }
+
+        .item .top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 4mm;
+        }
+
+        .role {
+            font-weight: 700;
+            font-size: 10.5pt;
+        }
+
+        .org {
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .timeplace {
+            font-size: 9pt;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .desc {
+            font-size: 9.5pt;
+            color: #0f172a;
+        }
+
+        .bullets {
+            margin: 0;
+            padding-left: 4.5mm;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: 2px solid #93c5fd;
+            outline-offset: 2px;
+            border-radius: 6px;
+        }
+
+        .muted {
+            color: #64748b;
+        }
+
+        /* ======= Print styles ======= */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .sidebar,
+            .toolbar,
+            .grid-overlay {
+                display: none !important;
+            }
+
+            .page {
+                border: none;
+                box-shadow: none;
+                padding: 12mm 12mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo" aria-hidden="true"></div>
+                <h1>Open&nbsp;CV</h1>
+            </div>
+
+            <div class="panel">
+                <h2>Quick Add</h2>
+                <div class="row" style="margin-bottom:.5rem;">
+                    <button class="btn" data-add="experience">Experience</button>
+                    <button class="btn" data-add="education">Education</button>
+                </div>
+                <div class="row" style="margin-bottom:.5rem;">
+                    <button class="btn" data-add="projects">Projects</button>
+                    <button class="btn" data-add="skills">Skills</button>
+                </div>
+                <button class="btn" data-add="custom">Custom Section</button>
+            </div>
+
+            <div class="panel">
+                <h2>Template</h2>
+                <select id="templateSelect" class="select" aria-label="Template">
+                    <option value="two-col">Two Column</option>
+                    <option value="one-col">Single Column</option>
+                </select>
+            </div>
+
+            <div class="panel">
+                <h2>Header</h2>
+                <label class="checkbox"><input type="checkbox" id="showTitle" checked /> Show role/title</label>
+            </div>
+
+            <div class="panel">
+                <h2>Data</h2>
+                <div class="row" style="margin-bottom:.5rem;">
+                    <button class="btn" id="saveJson">Save JSON</button>
+                    <button class="btn" id="loadJson">Load JSON</button>
+                </div>
+                <div class="row" style="margin-bottom:.5rem;">
+                    <button class="btn" id="exportHtml">Export HTML</button>
+                    <button class="btn" id="resetDoc">Reset</button>
+                </div>
+                <input type="file" id="fileInput" accept="application/json" style="display:none;" />
+                <small class="footer">Data auto-saves to your browser. No servers, no tracking.</small>
+            </div>
+
+            <div class="panel">
+                <h2>Utilities</h2>
+                <div class="row3">
+                    <button class="btn" id="toggleGrid" title="Toggle grid overlay">Grid</button>
+                    <button class="btn" id="printPdf" title="Print / Save to PDF">Print</button>
+                    <button class="btn" id="clearAll" title="Clear local data">Clear</button>
+                </div>
+            </div>
+
+            <div class="footer">Built with ❤️ — <a href="#" id="licenseLink">MIT License</a></div>
+        </aside>
+
+        <!-- Workspace -->
+        <main class="workspace">
+            <div class="toolbar" role="toolbar" aria-label="Top actions">
+                <button class="btn" data-add="experience">+ Experience</button>
+                <button class="btn" data-add="education">+ Education</button>
+                <button class="btn" data-add="projects">+ Projects</button>
+                <button class="btn" data-add="skills">+ Skills</button>
+                <button class="btn" data-add="custom">+ Custom</button>
+            </div>
+
+            <section id="page" class="page show-grid">
+                <div class="grid-overlay" aria-hidden="true"></div>
+                <div id="cv" class="grid" spellcheck="false">
+                    <!-- Header -->
+                    <header class="cv-header" id="header">
+                        <div>
+                            <div class="name" contenteditable="true" data-placeholder="Your Name">Your Name</div>
+                            <div class="title" id="roleTitle" contenteditable="true" data-placeholder="Role / Title">
+                                Software Engineer</div>
+                        </div>
+                        <div class="contact" contenteditable="true" data-placeholder="Email · Phone · Location">
+                            email@example.com · +977-98XXXXXXX · Kathmandu, Nepal</div>
+                    </header>
+
+                    <!-- Starter sections -->
+                    <article class="section full" data-type="summary">
+                        <div class="section-header">
+                            <div class="section-title" contenteditable="true">Summary</div>
+                            <div class="controls">
+                                <button class="icon-btn" data-span>⇔</button>
+                                <button class="icon-btn" data-up>↑</button>
+                                <button class="icon-btn" data-down>↓</button>
+                                <button class="icon-btn" data-remove>✕</button>
+                            </div>
+                        </div>
+                        <div class="desc" contenteditable="true"
+                            data-placeholder="Short 2–3 lines about your impact and focus.">Impact-driven developer with
+                            3+ years building reliable web apps. Focus on performance, DX, and clean architecture.</div>
+                    </article>
+
+                    <article class="section" data-type="experience"></article>
+                    <article class="section" data-type="education"></article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // ======= Utilities =======
+        const $ = (sel, root = document) => root.querySelector(sel);
+        const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+        const STORAGE_KEY = 'open-cv-data-v1';
+
+        function makeEl(tag, attrs = {}, html = '') {
+            const el = document.createElement(tag);
+            Object.entries(attrs).forEach(([k, v]) => {
+                if (k === 'class') el.className = v; else if (k === 'dataset') Object.assign(el.dataset, v); else if (k === 'contenteditable') el.setAttribute('contenteditable', v); else el.setAttribute(k, v);
+            });
+            if (html) el.innerHTML = html;
+            return el;
+        }
+
+        function sectionShell(type, full = false) {
+            const article = makeEl('article', { class: 'section' + (full ? ' full' : ''), 'data-type': type });
+            const header = makeEl('div', { class: 'section-header' });
+            const title = makeEl('div', { class: 'section-title', contenteditable: 'true' }, type.charAt(0).toUpperCase() + type.slice(1));
+            const ctrls = makeEl('div', { class: 'controls' });
+            ctrls.innerHTML = `
+        <button class="icon-btn" data-span title="Toggle full width">⇔</button>
+        <button class="icon-btn" data-up title="Move up">↑</button>
+        <button class="icon-btn" data-down title="Move down">↓</button>
+        <button class="icon-btn" data-remove title="Remove">✕</button>`;
+            header.append(title, ctrls);
+            article.append(header);
+            return article;
+        }
+
+        function expItem() {
+            const wrap = makeEl('div', { class: 'item' });
+            wrap.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="role" contenteditable="true" data-placeholder="Role">Frontend Engineer</div>
+            <div class="org muted" contenteditable="true" data-placeholder="Company">Foneinsure Pvt. Ltd.</div>
+          </div>
+          <div class="timeplace" contenteditable="true" data-placeholder="Dates · Place">2022 — 2025 · Kathmandu</div>
+        </div>
+        <ul class="bullets"></ul>
+        <button class="icon-btn" data-add-bullet>+ bullet</button>
+      `;
+            return wrap;
+        }
+
+        function eduItem() {
+            const wrap = makeEl('div', { class: 'item' });
+            wrap.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="role" contenteditable="true" data-placeholder="Degree">BSc CSIT</div>
+            <div class="org muted" contenteditable="true" data-placeholder="Institution">Your University</div>
+          </div>
+          <div class="timeplace" contenteditable="true" data-placeholder="Years · Place">2019 — 2023 · Kathmandu</div>
+        </div>
+        <div class="desc" contenteditable="true" data-placeholder="Highlights / GPA">Graduated with First Division; Project on InsureTech.</div>
+      `;
+            return wrap;
+        }
+
+        function projectItem() {
+            const wrap = makeEl('div', { class: 'item' });
+            wrap.innerHTML = `
+        <div class="top">
+          <div class="role" contenteditable="true" data-placeholder="Project Name">Claims Portal</div>
+          <div class="timeplace" contenteditable="true" data-placeholder="Year">2024</div>
+        </div>
+        <div class="desc" contenteditable="true" data-placeholder="Short description">Built ASP.NET MVC portal to manage claim memos, reporting, and QA workflow.</div>
+        <ul class="bullets"></ul>
+        <button class="icon-btn" data-add-bullet>+ bullet</button>
+      `;
+            return wrap;
+        }
+
+        function skillsBlock() {
+            const wrap = makeEl('div', { class: 'item' });
+            wrap.innerHTML = `
+        <div class="desc" contenteditable="true" data-placeholder="Comma-separated skills">ASP.NET, C#, SQL Server, SSMS, Tailwind CSS, Razor, MVC, Stored Procedures</div>
+      `;
+            return wrap;
+        }
+
+        function customItem() {
+            const wrap = makeEl('div', { class: 'item' });
+            wrap.innerHTML = `<div class="desc" contenteditable="true" data-placeholder="Write anything here...">Your custom content</div>`;
+            return wrap;
+        }
+
+        function ensureSection(type, full = false) {
+            let section = $(`.section[data-type="${type}"]#${type}`) || $(`.section[data-type="${type}"]`);
+            if (!section || section.children.length === 0) {
+                section = sectionShell(type, full);
+                $('#cv').appendChild(section);
+            }
+            return section;
+        }
+
+        function addExperience() {
+            const section = ensureSection('experience');
+            section.classList.remove('full');
+            const item = expItem();
+            section.appendChild(item);
+        }
+
+        function addEducation() {
+            const section = ensureSection('education');
+            section.classList.remove('full');
+            const item = eduItem();
+            section.appendChild(item);
+        }
+
+        function addProjects() {
+            const secType = 'projects';
+            let section = $(`.section[data-type="${secType}"]`);
+            if (!section) {
+                section = sectionShell('projects');
+                $('#cv').appendChild(section);
+            }
+            const item = projectItem();
+            section.appendChild(item);
+        }
+
+        function addSkills() {
+            const secType = 'skills';
+            let section = $(`.section[data-type="${secType}"]`);
+            if (!section) {
+                section = sectionShell('skills');
+                $('#cv').appendChild(section);
+            }
+            const item = skillsBlock();
+            section.appendChild(item);
+        }
+
+        function addCustom() {
+            const section = sectionShell('custom');
+            section.classList.add('full');
+            section.appendChild(customItem());
+            $('#cv').appendChild(section);
+        }
+
+        function addBullet(btn) {
+            const ul = btn.previousElementSibling;
+            const li = makeEl('li', { contenteditable: 'true' }, 'Accomplishment / impact metric (e.g., reduced query time by 60%)');
+            ul.appendChild(li);
+            li.focus();
+        }
+
+        function moveSection(el, dir) {
+            const section = el.closest('.section');
+            if (!section) return;
+            if (dir === 'up' && section.previousElementSibling) {
+                section.parentElement.insertBefore(section, section.previousElementSibling);
+            } else if (dir === 'down' && section.nextElementSibling) {
+                section.parentElement.insertBefore(section.nextElementSibling, section);
+            }
+            save();
+        }
+
+        function toggleSpan(el) {
+            const section = el.closest('.section');
+            section.classList.toggle('full');
+            save();
+        }
+
+        function removeSection(el) {
+            const section = el.closest('.section');
+            section.remove();
+            save();
+        }
+
+        // ======= Serialization =======
+        function serialize() {
+            const data = { meta: { v: 1, ts: Date.now() }, header: {}, sections: [] };
+            data.header.name = $('.name').innerHTML;
+            data.header.title = $('#roleTitle').innerHTML;
+            data.header.contact = $('.contact').innerHTML;
+            $$('#cv .section').forEach(sec => {
+                const s = { type: sec.dataset.type || 'custom', full: sec.classList.contains('full'), title: $('.section-title', sec)?.innerHTML || '', items: [] };
+                $$('.item', sec).forEach(item => {
+                    const obj = {
+                        role: $('.role', item)?.innerHTML || '',
+                        org: $('.org', item)?.innerHTML || '',
+                        timeplace: $('.timeplace', item)?.innerHTML || '',
+                        desc: $('.desc', item)?.innerHTML || ''
+                    };
+                    const bullets = $$('.bullets li', item).map(li => li.innerHTML);
+                    if (bullets.length) obj.bullets = bullets;
+                    s.items.push(obj);
+                });
+                data.sections.push(s);
+            });
+            return data;
+        }
+
+        function hydrate(data) {
+            if (!data) return;
+            const cv = $('#cv');
+            cv.innerHTML = '';
+
+            // header
+            const header = makeEl('header', { class: 'cv-header', id: 'header' });
+            header.innerHTML = `
+        <div>
+          <div class="name" contenteditable="true">${data.header?.name || 'Your Name'}</div>
+          <div class="title" id="roleTitle" contenteditable="true">${data.header?.title || ''}</div>
+        </div>
+        <div class="contact" contenteditable="true">${data.header?.contact || ''}</div>`;
+            cv.appendChild(header);
+
+            // sections
+            (data.sections || []).forEach(s => {
+                const sec = sectionShell(s.type || 'custom', !!s.full);
+                $('.section-title', sec).innerHTML = s.title || (s.type || 'Custom');
+                (s.items || []).forEach(it => {
+                    let wrap;
+                    if (s.type === 'experience') wrap = expItem();
+                    else if (s.type === 'education') wrap = eduItem();
+                    else if (s.type === 'projects') wrap = projectItem();
+                    else if (s.type === 'skills') wrap = skillsBlock();
+                    else wrap = customItem();
+
+                    if ($('.role', wrap) && it.role) $('.role', wrap).innerHTML = it.role;
+                    if ($('.org', wrap) && it.org) $('.org', wrap).innerHTML = it.org;
+                    if ($('.timeplace', wrap) && it.timeplace) $('.timeplace', wrap).innerHTML = it.timeplace;
+                    if ($('.desc', wrap) && it.desc) $('.desc', wrap).innerHTML = it.desc;
+                    if (it.bullets?.length && $('.bullets', wrap)) {
+                        const ul = $('.bullets', wrap);
+                        ul.innerHTML = '';
+                        it.bullets.forEach(b => {
+                            const li = makeEl('li', { contenteditable: 'true' });
+                            li.innerHTML = b; ul.appendChild(li);
+                        });
+                    }
+                    sec.appendChild(wrap);
+                });
+                cv.appendChild(sec);
+            });
+
+            applyTemplate($('#templateSelect').value);
+            save();
+        }
+
+        function save(toDisk = false) {
+            const data = serialize();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            if (toDisk) downloadFile('open-cv.json', JSON.stringify(data, null, 2), 'application/json');
+        }
+
+        function load(fromDisk = false) {
+            if (!fromDisk) {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) return hydrate(JSON.parse(raw));
+                return; // else do nothing
+            }
+            $('#fileInput').click();
+        }
+
+        function clearAll() {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+
+        function exportHTML() {
+            const doc = document.documentElement.cloneNode(true);
+            // remove grid overlay for export
+            doc.querySelector('#page')?.classList.remove('show-grid');
+            const html = '<!DOCTYPE html>\n' + doc.outerHTML;
+            downloadFile('open-cv-export.html', html, 'text/html');
+        }
+
+        function downloadFile(name, content, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function applyTemplate(t) {
+            const cv = $('#cv');
+            if (t === 'one-col') {
+                cv.style.gridTemplateColumns = 'repeat(12, 1fr)';
+                $$('#cv .section').forEach(s => s.classList.add('full'));
+            } else { // two-col default
+                cv.style.gridTemplateColumns = 'repeat(12, 1fr)';
+                $$('#cv .section').forEach((s, i) => {
+                    if (!s.classList.contains('full')) s.classList.remove('full');
+                });
+            }
+        }
+
+        // ======= Event Listeners =======
+        document.addEventListener('click', (e) => {
+            const t = e.target;
+            if (t.matches('[data-add]')) {
+                const type = t.getAttribute('data-add');
+                if (type === 'experience') addExperience();
+                if (type === 'education') addEducation();
+                if (type === 'projects') addProjects();
+                if (type === 'skills') addSkills();
+                if (type === 'custom') addCustom();
+                save();
+            }
+            if (t.matches('[data-add-bullet]')) addBullet(t);
+            if (t.matches('[data-up]')) moveSection(t, 'up');
+            if (t.matches('[data-down]')) moveSection(t, 'down');
+            if (t.matches('[data-span]')) toggleSpan(t);
+            if (t.matches('[data-remove]')) removeSection(t);
+            if (t.matches('#toggleGrid')) $('#page').classList.toggle('show-grid');
+            if (t.matches('#printPdf')) window.print();
+            if (t.matches('#clearAll')) clearAll();
+            if (t.matches('#saveJson')) save(true);
+            if (t.matches('#exportHtml')) exportHTML();
+            if (t.matches('#licenseLink')) {
+                e.preventDefault();
+                const mit = `MIT License\n\nCopyright (c) 2025 Open CV Contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
+                downloadFile('LICENSE.txt', mit, 'text/plain');
+            }
+            if (t.matches('#resetDoc')) {
+                if (confirm('Reset to starter content?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
+            }
+        });
+
+        document.addEventListener('input', (e) => {
+            // autosave on edits
+            if (e.target.matches('[contenteditable="true"]')) save();
+        });
+
+        $('#fileInput').addEventListener('change', (e) => {
+            const file = e.target.files?.[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => hydrate(JSON.parse(reader.result));
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        $('#templateSelect').addEventListener('change', (e) => applyTemplate(e.target.value));
+        $('#showTitle').addEventListener('change', (e) => { $('#roleTitle').style.display = e.target.checked ? '' : 'none'; save(); });
+
+        // Load from storage if present
+        load(false);
+
+        // Accessibility: placeholder hint for empty contenteditable
+        const observer = new MutationObserver(() => {
+            $$('[data-placeholder]').forEach(el => {
+                if (el.textContent.trim() === '') {
+                    el.setAttribute('data-empty', '');
+                    el.innerHTML = el.getAttribute('data-placeholder');
+                    el.selectAll = true;
+                }
+            });
+        });
+        observer.observe(document.body, { subtree: true, childList: true });
+    </script>
+</body>
+
+</html>
