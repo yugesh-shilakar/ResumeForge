@@ -20,7 +20,7 @@ Hostable on **Vercel** or any static site platform.
 
 ## 🚀 Live Demo
 You can deploy this on **Vercel** instantly or open `index.html` in your browser.  
-[Live Demo Link (Coming Soon)](#https://resume-forge-gilt.vercel.app/)
+[Live Demo Link (Coming Soon)](#)
 
 ---
 
